@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Milestone Velocity Pacer</title>
+<style>
+:root {
+  --bg: #F8FAFC;
+  --surface: #FFFFFF;
+  --text: #1E293B;
+  --muted: #64748B;
+  --line: #E2E8F0;
+  --accent: #0D9488;
+  --accent-dark: #0F766E;
+  --accent-soft: #CCFBF1;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; min-height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color .6s ease;
+}
+body[data-view="break"] { background: #F0FDFA; }
+
+.screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+}
+.panel { width: 100%; max-width: 480px; }
+.focus { text-align: center; width: 100%; max-width: 600px; }
+
+h1 { margin: 0 0 24px; font-size: 22px; font-weight: 600; }
+.label { font-size: 14px; color: var(--muted); }
+.mono { font-variant-numeric: tabular-nums; }
+
+.field { margin-bottom: 20px; }
+.field > label, .field > .label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+input[type="text"], input[type="number"] {
+  width: 100%;
+  font: inherit;
+  color: var(--text);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  min-height: 44px;
+}
+input::placeholder { color: #94A3B8; }
+.custom-unit { margin-top: 8px; }
+input:focus, select:focus, button:focus-visible {
+  outline: 2px solid rgba(79, 70, 229, .35);
+  outline-offset: 2px;
+}
+.pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.pill {
+  font: inherit;
+  font-size: 14px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--text);
+  cursor: pointer;
+}
+.pill[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-dark); }
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  margin-bottom: 8px;
+  border-top: 1px solid var(--line);
+}
+.switch-wrap { display: flex; align-items: center; gap: 10px; }
+.switch {
+  position: relative;
+  width: 44px;
+  height: 26px;
+  border-radius: 999px;
+  border: 0;
+  background: #CBD5E1;
+  cursor: pointer;
+  padding: 0;
+  transition: background .2s;
+}
+.switch[aria-checked="true"] { background: var(--accent); }
+.switch::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform .2s;
+}
+.switch[aria-checked="true"]::after { transform: translateX(18px); }
+.switch-state { font-size: 14px; color: var(--muted); min-width: 22px; }
+.error { color: #B42318; font-size: 14px; min-height: 18px; margin: 0 0 8px; }
+
+.btn {
+  display: block;
+  width: 100%;
+  font: inherit;
+  font-weight: 500;
+  color: #fff;
+  background: var(--accent);
+  border: 0;
+  border-radius: 10px;
+  padding: 12px 16px;
+  min-height: 46px;
+  cursor: pointer;
+}
+.btn:hover { background: var(--accent-dark); }
+.btn.big {
+  min-height: 120px;
+  font-size: 20px;
+  border-radius: 16px;
+  margin: 40px 0 16px;
+}
+.btn-inline { font-size: 14px; font-weight: 400; opacity: .9; }
+
+.link {
+  background: none;
+  border: 0;
+  color: var(--muted);
+  font: inherit;
+  font-size: 14px;
+  padding: 8px 10px;
+  min-height: 40px;
+  cursor: pointer;
+  border-radius: 8px;
+}
+.link:hover { color: var(--text); }
+.link:disabled { opacity: .4; cursor: default; }
+
+/* Focus view */
+.task { font-size: 14px; color: var(--muted); }
+.milestone {
+  font-size: 40px;
+  font-weight: 600;
+  letter-spacing: -.01em;
+  margin: 12px 0 20px;
+}
+.progress {
+  height: 6px;
+  background: var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.progress .fill {
+  height: 100%;
+  width: 0;
+  background: var(--accent);
+  border-radius: 999px;
+  transition: width .5s ease;
+}
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 28px;
+}
+.metric { display: flex; flex-direction: column; gap: 2px; }
+.metric .value { font-size: 20px; font-weight: 500; }
+.bottombar {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 36px;
+  flex-wrap: wrap;
+}
+
+/* Break view */
+.break { text-align: center; width: 100%; max-width: 480px; }
+.orb {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 28px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #CCFBF1, #99F6E4 55%, #5EEAD4);
+  opacity: .85;
+  animation: breathe 8s ease-in-out infinite;
+}
+@keyframes breathe { 0%, 100% { transform: scale(.92); } 50% { transform: scale(1.06); } }
+.break-total { margin: 24px 0 32px; }
+.break-total .value { display: block; font-size: 40px; font-weight: 500; }
+
+/* Summary */
+.stats { margin: 0 0 28px; }
+.stats div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 15px;
+}
+.stats dt { color: var(--muted); }
+.stats dd { margin: 0; font-weight: 500; text-align: right; }
+.actions { display: flex; flex-direction: column; gap: 8px; }
+
+.pulse { animation: pulse .4s ease-out; }
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(13, 148, 136, .35); }
+  100% { box-shadow: 0 0 0 14px rgba(13, 148, 136, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+@media (max-width: 560px) {
+  .milestone { font-size: 32px; }
+  .metrics { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body data-view="setup">
+<main id="app" class="screen"></main>
+
+<script>
+'use strict';
+
+/* ---------- helpers ---------- */
+const $ = (sel) => document.querySelector(sel);
+const pad = (n) => String(n).padStart(2, '0');
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+const ROLLING_WINDOW = 5;          // rolling pace = mean of the last 5 completed units
+const TICK_MS = 250;
+const COLUMNS = ['unit_number', 'unit_duration_ms', 'rolling_avg_pace_ms', 'break_duration_ms'];
+
+function singularize(w) {
+  if (/ies$/i.test(w)) return w.replace(/ies$/i, 'y');
+  if (/sses$/i.test(w)) return w.slice(0, -2);
+  if (/s$/i.test(w) && !/ss$/i.test(w)) return w.slice(0, -1);
+  return w;
+}
+
+function fmtClock(ms) {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  return h > 0 ? `${h}:${pad(m)}:${pad(sec)}` : `${pad(m)}:${pad(sec)}`;
+}
+
+function fmtDur(ms) {
+  const s = Math.round(Math.max(0, ms) / 1000);
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  if (m < 60) return `${m}m ${r}s`;
+  return `${Math.floor(m / 60)}h ${m % 60}m`;
+}
+
+function fmtEta(ms) {
+  const min = ms / 60000;
+  if (min >= 1) return `~${Math.round(min)} min`;
+  return `~${Math.max(1, Math.round(ms / 1000))} sec`;
+}
+
+function setText(sel, text) {
+  const el = $(sel);
+  if (el && el.textContent !== text) el.textContent = text;
+}
+
+function pulseEl(el) {
+  if (!el) return;
+  el.classList.remove('pulse');
+  void el.offsetWidth;
+  el.classList.add('pulse');
+}
+
+/* ---------- state ---------- */
+const S = {
+  view: 'setup',                 // setup | active | break | summary
+  draft: { task: '', unit: 'Pages', custom: '', target: 10, showPace: true },
+  config: null,
+  sessionId: '',
+  startedAt: 0,
+  endedAt: 0,
+  endReason: null,
+  events: [],                    // telemetry log, in memory only
+  units: [],                     // completed units: {n, durationMs, completedAt}
+  unitBankedMs: 0,               // unit time before the current running segment
+  segmentStart: null,            // null while paused on break
+  breakStartedAt: null,
+  breakTotalMs: 0,
+  breakCount: 0,
+  blurCount: 0,
+  undoCount: 0,
+};
+
+const isRunning = () => S.view === 'active' || S.view === 'break';
+const isComplete = () => S.units.length >= S.config.target;
+const unitElapsedMs = (now = Date.now()) => S.unitBankedMs + (S.segmentStart !== null ? now - S.segmentStart : 0);
+
+function rollingAvgMs() {
+  const win = S.units.slice(-ROLLING_WINDOW);
+  return win.length ? win.reduce((a, u) => a + u.durationMs, 0) / win.length : null;
+}
+
+function computeStats() {
+  const n = S.units.length;
+  const total = S.units.reduce((a, u) => a + u.durationMs, 0);
+  let fast = null;
+  let slow = null;
+  for (const u of S.units) {
+    if (!fast || u.durationMs < fast.durationMs) fast = u;
+    if (!slow || u.durationMs > slow.durationMs) slow = u;
+  }
+  return {
+    n,
+    avg: n ? total / n : null,
+    fast,
+    slow,
+    breakMs: S.breakTotalMs,
+    breakCount: S.breakCount,
+    lengthMs: S.endedAt - S.startedAt,
+  };
+}
+
+/* ---------- telemetry ---------- */
+function log(event, data = {}) {
+  const entry = {
+    session_id: S.sessionId,
+    event,
+    timestamp_iso: new Date().toISOString(),
+    elapsed_ms: Date.now() - S.startedAt,
+    pace_readout_visible: S.config.showPace,
+    condition: S.config.condition,
+  };
+  for (const k of COLUMNS) entry[k] = data[k] ?? null;
+  const details = {};
+  for (const [k, v] of Object.entries(data)) if (!COLUMNS.includes(k)) details[k] = v;
+  entry.details = details;
+  S.events.push(entry);
+}
+
+/* ---------- session actions ---------- */
+function readDraft() {
+  const t = $('#taskInput');
+  const c = $('#customUnit');
+  const n = $('#targetInput');
+  if (t) S.draft.task = t.value;
+  if (c) S.draft.custom = c.value;
+  if (n) S.draft.target = n.value;
+}
+
+function startFromSetup() {
+  readDraft();
+  const d = S.draft;
+  const task = d.task.trim();
+  const unitPlural = d.unit === 'Custom' ? d.custom.trim() : d.unit;
+  const target = Number(d.target);
+  const errors = [];
+  let focusEl = null;
+  if (!task) { errors.push('Enter a task name.'); focusEl = $('#taskInput'); }
+  if (!unitPlural) { errors.push('Enter a unit name.'); focusEl = focusEl || $('#customUnit'); }
+  if (!Number.isInteger(target) || target < 1 || target > 500) {
+    errors.push('Target: 1–500.');
+    focusEl = focusEl || $('#targetInput');
+  }
+  $('#setupError').textContent = errors.join(' ');
+  if (errors.length) { focusEl?.focus(); return; }
+
+  const now = Date.now();
+  S.config = {
+    task,
+    unitPlural,
+    unitSingular: singularize(unitPlural),
+    target,
+    showPace: d.showPace,
+    condition: d.showPace ? 'pace_visible' : 'pace_hidden',
+  };
+  S.sessionId = `${now.toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+  S.startedAt = now;
+  S.endedAt = 0;
+  S.endReason = null;
+  S.events = [];
+  S.units = [];
+  S.unitBankedMs = 0;
+  S.segmentStart = now;
+  S.breakStartedAt = null;
+  S.breakTotalMs = 0;
+  S.breakCount = 0;
+  S.blurCount = 0;
+  S.undoCount = 0;
+  S.view = 'active';
+
+  log('SESSION_START', { task_name: task, unit_type: unitPlural, target });
+  render();
+}
+
+function completeUnit() {
+  if (S.view !== 'active' || isComplete()) return;
+  const now = Date.now();
+  const dur = unitElapsedMs(now);
+  S.units.push({ n: S.units.length + 1, durationMs: dur, completedAt: now });
+  S.unitBankedMs = 0;
+  S.segmentStart = now;
+  log('UNIT_COMPLETED', {
+    unit_number: S.units.length,
+    unit_duration_ms: Math.round(dur),
+    rolling_avg_pace_ms: Math.round(rollingAvgMs()),
+  });
+  refreshActive(true);
+}
+
+function undoLast() {
+  if (S.view !== 'active' || !S.units.length) return;
+  const now = Date.now();
+  const u = S.units.pop();
+  S.unitBankedMs = u.durationMs + unitElapsedMs(now);
+  S.segmentStart = now;
+  S.undoCount++;
+  const avg = rollingAvgMs();
+  log('UNDO_TRIGGERED', {
+    unit_number: u.n,
+    unit_duration_ms: Math.round(u.durationMs),
+    rolling_avg_pace_ms: avg === null ? null : Math.round(avg),
+  });
+  refreshActive();
+}
+
+function startBreak() {
+  if (S.view !== 'active') return;
+  const now = Date.now();
+  S.unitBankedMs = unitElapsedMs(now);
+  S.segmentStart = null;
+  S.breakStartedAt = now;
+  S.view = 'break';
+  log('BREAK_STARTED', { unit_number: S.units.length + 1 });
+  render();
+}
+
+function endBreak() {
+  if (S.view !== 'break') return;
+  const now = Date.now();
+  const d = now - S.breakStartedAt;
+  S.breakTotalMs += d;
+  S.breakCount++;
+  S.breakStartedAt = null;
+  S.segmentStart = now;
+  S.view = 'active';
+  log('BREAK_ENDED', { unit_number: S.units.length + 1, break_duration_ms: d });
+  render();
+}
+
+function toggleBreak() {
+  if (S.view === 'active') startBreak();
+  else if (S.view === 'break') endBreak();
+}
+
+function endSession(reason) {
+  if (!isRunning()) return;
+  const now = Date.now();
+  const partial = unitElapsedMs(now);
+  let implicitBreakEnd = null;
+  if (S.view === 'break') {
+    implicitBreakEnd = now - S.breakStartedAt;
+    S.breakTotalMs += implicitBreakEnd;
+    S.breakCount++;
+    S.breakStartedAt = null;
+  }
+  S.unitBankedMs = 0;
+  S.segmentStart = null;
+  S.endedAt = now;
+  S.endReason = reason;
+  S.view = 'summary';
+  if (implicitBreakEnd !== null) {
+    log('BREAK_ENDED', { break_duration_ms: implicitBreakEnd, ended_by_session_end: true });
+  }
+  log('SESSION_ENDED', {
+    end_reason: reason,
+    units_completed: S.units.length,
+    partial_unit_elapsed_ms: Math.round(partial),
+  });
+  render();
+}
+
+let endArmedTimer = null;
+function confirmEnd(el) {
+  if (!el.dataset.armed) {
+    el.dataset.armed = '1';
+    el.textContent = 'Confirm end';
+    clearTimeout(endArmedTimer);
+    endArmedTimer = setTimeout(() => {
+      delete el.dataset.armed;
+      el.textContent = 'End Session';
+    }, 3000);
+    return;
+  }
+  clearTimeout(endArmedTimer);
+  endSession('manual');
+}
+
+function setUnit(u) {
+  readDraft();
+  S.draft.unit = u;
+  document.querySelectorAll('.pill').forEach((p) => p.setAttribute('aria-pressed', String(p.dataset.unit === u)));
+  const custom = $('#customUnit');
+  custom.hidden = u !== 'Custom';
+  if (u === 'Custom') custom.focus();
+}
+
+function togglePace(el) {
+  S.draft.showPace = !S.draft.showPace;
+  el.setAttribute('aria-checked', String(S.draft.showPace));
+  el.parentElement.querySelector('.switch-state').textContent = S.draft.showPace ? 'On' : 'Off';
+}
+
+/* ---------- views ---------- */
+function setupHTML() {
+  const d = S.draft;
+  const units = ['Problems', 'Pages', 'Sections', 'Custom'];
+  return `
+  <section class="panel" aria-labelledby="setupTitle">
+    <h1 id="setupTitle">New session</h1>
+    <form id="setupForm" novalidate>
+      <div class="field">
+        <label for="taskInput">Task name</label>
+        <input id="taskInput" type="text" maxlength="120" autocomplete="off"
+               value="${esc(d.task)}">
+      </div>
+      <div class="field">
+        <span class="label" id="unitLabel">Unit</span>
+        <div class="pills" role="group" aria-labelledby="unitLabel">
+          ${units.map((u) => `<button type="button" class="pill" data-unit="${u}" aria-pressed="${d.unit === u}">${u}</button>`).join('')}
+        </div>
+        <input id="customUnit" class="custom-unit" type="text" maxlength="30" autocomplete="off"
+               aria-label="Custom unit name" placeholder="e.g., Flashcards, Paragraphs"
+               value="${esc(d.custom)}" ${d.unit === 'Custom' ? '' : 'hidden'}>
+      </div>
+      <div class="field">
+        <label for="targetInput">Target</label>
+        <input id="targetInput" type="number" inputmode="numeric" min="1" max="500" step="1" value="${esc(d.target)}">
+      </div>
+      <div class="toggle-row">
+        <span id="paceLabel">Live pace readout</span>
+        <div class="switch-wrap">
+          <button type="button" class="switch" role="switch" aria-labelledby="paceLabel"
+                  aria-checked="${d.showPace}" data-action="toggle-pace"></button>
+          <span class="switch-state">${d.showPace ? 'On' : 'Off'}</span>
+        </div>
+      </div>
+      <p class="error" id="setupError" role="alert"></p>
+      <button type="submit" class="btn">Start Session</button>
+    </form>
+  </section>`;
+}
+
+function activeHTML() {
+  const c = S.config;
+  return `
+  <section class="focus" aria-label="Session">
+    <div class="task">${esc(c.task)}</div>
+    <h1 class="milestone" id="milestone" aria-live="polite"></h1>
+    <div class="progress" id="progressbar" role="progressbar" aria-label="Progress"
+         aria-valuemin="0" aria-valuemax="${c.target}" aria-valuenow="0">
+      <div class="fill" id="fill"></div>
+    </div>
+    ${c.showPace ? `
+    <div class="metrics">
+      <div class="metric"><span class="label">Unit time</span><span class="value mono" id="unitElapsed">00:00</span></div>
+      <div class="metric"><span class="label">Avg pace</span><span class="value" id="avgPace">—</span></div>
+      <div class="metric"><span class="label">Remaining</span><span class="value" id="eta">—</span></div>
+    </div>` : ''}
+    <button type="button" class="btn big" id="primaryBtn" data-action="primary" aria-keyshortcuts="Space"></button>
+    <nav class="bottombar" aria-label="Session controls">
+      <button type="button" class="link" id="undoBtn" data-action="undo">Undo</button>
+      <button type="button" class="link" data-action="break">Break</button>
+      <button type="button" class="link" data-action="end">End Session</button>
+    </nav>
+  </section>`;
+}
+
+function refreshActive(pulse = false) {
+  const c = S.config;
+  const done = S.units.length;
+  const complete = done >= c.target;
+  const sing = c.unitSingular;
+
+  setText('#milestone', complete
+    ? `${done} of ${c.target} done`
+    : `${cap(sing)} ${done + 1} of ${c.target}`);
+  const pct = Math.round((done / c.target) * 100);
+  $('#fill').style.width = `${pct}%`;
+  $('#progressbar').setAttribute('aria-valuenow', String(done));
+
+  const btn = $('#primaryBtn');
+  const label = complete
+    ? 'Finish'
+    : `+ Complete ${esc(cap(sing))} <span class="btn-inline">(Space)</span>`;
+  if (btn.dataset.label !== label) {
+    btn.innerHTML = label;
+    btn.dataset.label = label;
+  }
+  $('#undoBtn').disabled = done === 0;
+
+  if (c.showPace) {
+    const avg = rollingAvgMs();
+    const rem = c.target - done;
+    setText('#unitElapsed', fmtClock(unitElapsedMs()));
+    setText('#avgPace', avg === null ? '—' : `${fmtDur(avg)}`);
+    setText('#eta', rem === 0 ? '0' : avg === null ? '—' : fmtEta(avg * rem));
+  }
+
+  if (pulse) {
+    pulseEl(btn);
+    pulseEl($('#milestone'));
+  }
+}
+
+function breakHTML() {
+  return `
+  <section class="break" aria-live="polite">
+    <div class="orb" aria-hidden="true"></div>
+    <h1>Break</h1>
+    <div class="break-total">
+      <span class="value mono" id="breakTotal">00:00</span>
+    </div>
+    <button type="button" class="btn" data-action="resume">Resume</button>
+    <p><button type="button" class="link" data-action="end">End Session</button></p>
+  </section>`;
+}
+
+function refreshBreak() {
+  const live = S.breakStartedAt ? Date.now() - S.breakStartedAt : 0;
+  setText('#breakTotal', fmtClock(S.breakTotalMs + live));
+}
+
+function summaryHTML() {
+  const c = S.config;
+  const st = computeStats();
+  const sing = c.unitSingular.toLowerCase();
+  const plural = c.unitPlural.toLowerCase();
+  const rows = [
+    ['Completed', `${st.n} / ${c.target} ${plural}`],
+    ['Average pace', st.avg === null ? '—' : `${fmtDur(st.avg)} / ${sing}`],
+    ['Fastest', st.fast ? `${sing} ${st.fast.n} · ${fmtDur(st.fast.durationMs)}` : '—'],
+    ['Slowest', st.slow ? `${sing} ${st.slow.n} · ${fmtDur(st.slow.durationMs)}` : '—'],
+    ['Break time', fmtDur(st.breakMs)],
+    ['Session length', fmtDur(st.lengthMs)],
+  ];
+  return `
+  <section class="panel" aria-labelledby="sumTitle">
+    <h1 id="sumTitle">${esc(c.task)}</h1>
+    <dl class="stats">
+      ${rows.map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('')}
+    </dl>
+    <div class="actions">
+      <button type="button" class="link" data-action="new">New session</button>
+    </div>
+  </section>`;
+}
+
+const VIEWS = { setup: setupHTML, active: activeHTML, break: breakHTML, summary: summaryHTML };
+
+function render() {
+  document.body.dataset.view = S.view;
+  $('#app').innerHTML = VIEWS[S.view]();
+  if (S.view === 'active') refreshActive();
+  if (S.view === 'break') refreshBreak();
+  if (S.view === 'setup' && !S.draft.task) $('#taskInput')?.focus();
+}
+
+/* ---------- events ---------- */
+$('#app').addEventListener('click', (e) => {
+  const el = e.target.closest('[data-action], [data-unit]');
+  if (!el || el.disabled) return;
+  if (el.dataset.unit) return setUnit(el.dataset.unit);
+  switch (el.dataset.action) {
+    case 'primary': return isComplete() ? endSession('target_reached') : completeUnit();
+    case 'undo': return undoLast();
+    case 'break': return toggleBreak();
+    case 'resume': return endBreak();
+    case 'end': return confirmEnd(el);
+    case 'toggle-pace': return togglePace(el);
+    case 'new':
+      S.view = 'setup';
+      return render();
+  }
+});
+
+document.addEventListener('submit', (e) => {
+  if (e.target.id === 'setupForm') {
+    e.preventDefault();
+    startFromSetup();
+  }
+});
+
+const isSpace = (e) => e.code === 'Space' || e.key === ' ' || e.key === 'Spacebar';
+const isTyping = (t) => t && t.closest && t.closest('input, textarea, select, [contenteditable="true"]');
+
+document.addEventListener('keydown', (e) => {
+  if (e.altKey || e.ctrlKey || e.metaKey) return;
+  if (!isRunning() || isTyping(e.target)) return;
+  if (isSpace(e)) {
+    e.preventDefault();
+    if (!e.repeat && S.view === 'active' && !isComplete()) completeUnit();
+    return;
+  }
+  if ((e.key === 'p' || e.key === 'P') && !e.repeat) {
+    e.preventDefault();
+    toggleBreak();
+  }
+});
+
+document.addEventListener('keyup', (e) => {
+  if (isSpace(e) && isRunning() && !isTyping(e.target)) e.preventDefault();
+});
+
+window.addEventListener('blur', () => {
+  if (!isRunning()) return;
+  S.blurCount++;
+  log('WINDOW_BLUR', { unit_number: S.units.length + 1 });
+});
+
+window.addEventListener('focus', () => {
+  if (!isRunning()) return;
+  log('WINDOW_FOCUS', { unit_number: S.units.length + 1 });
+});
+
+setInterval(() => {
+  if (S.view === 'active') refreshActive();
+  else if (S.view === 'break') refreshBreak();
+}, TICK_MS);
+
+render();
+</script>
+</body>
+</html>
