@@ -14,6 +14,8 @@
   --accent: #0D9488;
   --accent-dark: #0F766E;
   --accent-soft: #CCFBF1;
+  --amber: #D97706;
+  --terracotta: #EA580C;
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -37,11 +39,14 @@ body[data-view="break"] { background: #F0FDFA; }
   padding: 32px 20px;
 }
 .panel { width: 100%; max-width: 480px; }
+.report { width: 100%; max-width: 680px; }
 .focus { text-align: center; width: 100%; max-width: 600px; }
 
-h1 { margin: 0 0 24px; font-size: 22px; font-weight: 600; }
+h1 { margin: 0 0 8px; font-size: 22px; font-weight: 600; }
+h2 { font-size: 15px; font-weight: 600; margin: 0 0 8px; }
 .label { font-size: 14px; color: var(--muted); }
 .mono { font-variant-numeric: tabular-nums; }
+.sub { font-size: 14px; color: var(--muted); margin: 0 0 20px; }
 
 .field { margin-bottom: 20px; }
 .field > label, .field > .label {
@@ -62,7 +67,7 @@ input[type="text"], input[type="number"] {
 }
 input::placeholder { color: #94A3B8; }
 .custom-unit { margin-top: 8px; }
-input:focus, select:focus, button:focus-visible {
+input:focus, button:focus-visible {
   outline: 2px solid rgba(79, 70, 229, .35);
   outline-offset: 2px;
 }
@@ -129,11 +134,17 @@ input:focus, select:focus, button:focus-visible {
   cursor: pointer;
 }
 .btn:hover { background: var(--accent-dark); }
+.btn.outline {
+  background: #fff;
+  color: var(--accent-dark);
+  border: 1px solid var(--accent);
+}
+.btn.outline:hover { background: var(--accent-soft); }
 .btn.big {
-  min-height: 120px;
+  min-height: 110px;
   font-size: 20px;
   border-radius: 16px;
-  margin: 40px 0 16px;
+  margin: 28px 0 16px;
 }
 .btn-inline { font-size: 14px; font-weight: 400; opacity: .9; }
 
@@ -154,29 +165,71 @@ input:focus, select:focus, button:focus-visible {
 /* Focus view */
 .task { font-size: 14px; color: var(--muted); }
 .milestone {
-  font-size: 40px;
+  font-size: 36px;
   font-weight: 600;
   letter-spacing: -.01em;
-  margin: 12px 0 20px;
+  margin: 10px 0 0;
 }
-.progress {
-  height: 6px;
-  background: var(--line);
-  border-radius: 999px;
-  overflow: hidden;
+.treat-badge {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--terracotta);
+  margin: 10px 0 0;
 }
-.progress .fill {
-  height: 100%;
-  width: 0;
-  background: var(--accent);
-  border-radius: 999px;
-  transition: width .5s ease;
+.track-wrap { width: 100%; margin-top: 8px; }
+.track-wrap svg { width: 100%; height: auto; display: block; overflow: visible; }
+#trackFill {
+  transform-box: fill-box;
+  transform-origin: 0% 50%;
+  transition: transform .7s ease;
 }
+#dog { transition: transform .7s cubic-bezier(.3, .7, .3, 1); }
+#treatPos, #popPos { transition: none; }
+
+.treat { opacity: 0; }
+.treat.drop { animation: drop .4s ease-out forwards; }
+.treat.eaten { animation: eat .35s ease-in forwards; }
+@keyframes drop {
+  from { transform: translateY(-34px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+@keyframes eat {
+  from { transform: scale(1); opacity: 1; }
+  to { transform: scale(.2) translateY(-6px); opacity: 0; }
+}
+
+.dog-hop.hop { animation: hop .5s ease-out; }
+@keyframes hop {
+  0%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-14px); }
+  70% { transform: translateY(0); }
+}
+
+.pop-anim { opacity: 0; }
+.pop-anim.run { animation: pop 1.1s ease-out forwards; }
+@keyframes pop {
+  0% { opacity: 0; transform: translateY(6px) scale(.85); }
+  20% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-18px); }
+}
+
+.banner {
+  background: #FFF7ED;
+  border: 1px solid #FDBA74;
+  border-radius: 14px;
+  padding: 16px;
+  margin-top: 24px;
+  animation: fade .5s ease-out;
+}
+.banner-title { margin: 0 0 12px; font-size: 18px; font-weight: 600; color: #C2410C; }
+.banner-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+
 .metrics {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
-  margin-top: 28px;
+  margin-top: 24px;
 }
 .metric { display: flex; flex-direction: column; gap: 2px; }
 .metric .value { font-size: 20px; font-weight: 500; }
@@ -184,7 +237,7 @@ input:focus, select:focus, button:focus-visible {
   display: flex;
   justify-content: center;
   gap: 4px;
-  margin-top: 36px;
+  margin-top: 28px;
   flex-wrap: wrap;
 }
 
@@ -203,19 +256,42 @@ input:focus, select:focus, button:focus-visible {
 .break-total { margin: 24px 0 32px; }
 .break-total .value { display: block; font-size: 40px; font-weight: 500; }
 
-/* Summary */
-.stats { margin: 0 0 28px; }
-.stats div {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--line);
-  font-size: 15px;
+/* Researcher report */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  margin: 20px 0 24px;
 }
-.stats dt { color: var(--muted); }
-.stats dd { margin: 0; font-weight: 500; text-align: right; }
+.card-stat {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.card-stat .big { font-size: 20px; font-weight: 600; }
+.card-stat .sub { font-size: 13px; margin: 0; }
+.check { margin-bottom: 24px; }
+.check input { max-width: 140px; }
+.check .sub { margin: 8px 0 0; }
+.units {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  margin-bottom: 24px;
+}
+.units th {
+  text-align: left;
+  color: var(--muted);
+  font-weight: 500;
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--line);
+}
+.units td { padding: 8px 6px; border-bottom: 1px solid var(--line); }
 .actions { display: flex; flex-direction: column; gap: 8px; }
+.toast { min-height: 20px; font-size: 14px; color: var(--accent-dark); margin: 12px 0 0; text-align: center; }
 
 .pulse { animation: pulse .4s ease-out; }
 @keyframes pulse {
@@ -226,8 +302,9 @@ input:focus, select:focus, button:focus-visible {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
 @media (max-width: 560px) {
-  .milestone { font-size: 32px; }
+  .milestone { font-size: 30px; }
   .metrics { grid-template-columns: 1fr; }
+  .banner-actions { grid-template-columns: 1fr; }
 }
 </style>
 </head>
@@ -242,9 +319,12 @@ const $ = (sel) => document.querySelector(sel);
 const pad = (n) => String(n).padStart(2, '0');
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
-const ROLLING_WINDOW = 5;          // rolling pace = mean of the last 5 completed units
+const ROLLING_WINDOW = 5;   // rolling pace = mean of the last 5 completed units
 const TICK_MS = 250;
-const COLUMNS = ['unit_number', 'unit_duration_ms', 'rolling_avg_pace_ms', 'break_duration_ms'];
+const DOG_MIN_X = 84;       // dog centre at 0 units
+const DOG_MAX_X = 472;      // dog centre at target (next to the doghouse)
+const TREAT_OFFSET_X = 36;  // treat sits just ahead of the dog
+const REDUCE_MOTION = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 function singularize(w) {
   if (/ies$/i.test(w)) return w.replace(/ies$/i, 'y');
@@ -262,6 +342,7 @@ function fmtClock(ms) {
 }
 
 function fmtDur(ms) {
+  if (ms === null || ms === undefined) return '—';
   const s = Math.round(Math.max(0, ms) / 1000);
   if (s < 60) return `${s}s`;
   const m = Math.floor(s / 60);
@@ -288,70 +369,62 @@ function pulseEl(el) {
   el.classList.add('pulse');
 }
 
+// Restart a CSS animation class on an SVG/HTML element.
+function restartClass(el, cls) {
+  if (!el) return;
+  el.classList.remove(cls);
+  void el.getBoundingClientRect();
+  el.classList.add(cls);
+}
+
+// Dog x position (SVG user units) for a progress fraction 0..1.
+const dogX = (f) => DOG_MIN_X + Math.min(1, Math.max(0, f)) * (DOG_MAX_X - DOG_MIN_X);
+
 /* ---------- state ---------- */
 const S = {
-  view: 'setup',                 // setup | active | break | summary
+  view: 'setup',                       // setup | active | break | summary
   draft: { task: '', unit: 'Pages', custom: '', target: 10, showPace: true },
   config: null,
   sessionId: '',
-  startedAt: 0,
+  startedAt: 0,                        // epoch ms
   endedAt: 0,
   endReason: null,
-  events: [],                    // telemetry log, in memory only
-  units: [],                     // completed units: {n, durationMs, completedAt}
-  unitBankedMs: 0,               // unit time before the current running segment
-  segmentStart: null,            // null while paused on break
+  sessionLogs: [],                     // structured telemetry, in memory only
+  units: [],                           // {n, durationMs, rollingAvgMs, trigger, windowStartMs, completedElapsedMs}; one per treat
+  unitBankedMs: 0,
+  segmentStart: null,                  // null while paused on break
   breakStartedAt: null,
   breakTotalMs: 0,
   breakCount: 0,
-  blurCount: 0,
   undoCount: 0,
+  overtime: false,                     // user chose Bonus Treats after reaching the target
+  away: false,
+  awayStartedAt: 0,
+  timeAwayMs: 0,
+  tabSwitchCount: 0,
+  glanceTimes: [],                     // session-elapsed ms of each return to the tracker
+  actualOverride: null,                // researcher's observed unit count
 };
 
 const isRunning = () => S.view === 'active' || S.view === 'break';
-const isComplete = () => S.units.length >= S.config.target;
+const elapsed = (now = Date.now()) => now - S.startedAt;
 const unitElapsedMs = (now = Date.now()) => S.unitBankedMs + (S.segmentStart !== null ? now - S.segmentStart : 0);
+const atTarget = () => S.units.length >= S.config.target;
+const canLog = () => S.view === 'active' && (!atTarget() || S.overtime);
 
 function rollingAvgMs() {
   const win = S.units.slice(-ROLLING_WINDOW);
   return win.length ? win.reduce((a, u) => a + u.durationMs, 0) / win.length : null;
 }
 
-function computeStats() {
-  const n = S.units.length;
-  const total = S.units.reduce((a, u) => a + u.durationMs, 0);
-  let fast = null;
-  let slow = null;
-  for (const u of S.units) {
-    if (!fast || u.durationMs < fast.durationMs) fast = u;
-    if (!slow || u.durationMs > slow.durationMs) slow = u;
-  }
-  return {
-    n,
-    avg: n ? total / n : null,
-    fast,
-    slow,
-    breakMs: S.breakTotalMs,
-    breakCount: S.breakCount,
-    lengthMs: S.endedAt - S.startedAt,
-  };
-}
-
 /* ---------- telemetry ---------- */
-function log(event, data = {}) {
-  const entry = {
-    session_id: S.sessionId,
+function log(event, fields = {}) {
+  S.sessionLogs.push({
     event,
-    timestamp_iso: new Date().toISOString(),
-    elapsed_ms: Date.now() - S.startedAt,
-    pace_readout_visible: S.config.showPace,
-    condition: S.config.condition,
-  };
-  for (const k of COLUMNS) entry[k] = data[k] ?? null;
-  const details = {};
-  for (const [k, v] of Object.entries(data)) if (!COLUMNS.includes(k)) details[k] = v;
-  entry.details = details;
-  S.events.push(entry);
+    timestamp: new Date().toISOString(),
+    elapsedMs: elapsed(),
+    ...fields,
+  });
 }
 
 /* ---------- session actions ---------- */
@@ -394,50 +467,119 @@ function startFromSetup() {
   S.startedAt = now;
   S.endedAt = 0;
   S.endReason = null;
-  S.events = [];
+  S.sessionLogs = [];
   S.units = [];
   S.unitBankedMs = 0;
   S.segmentStart = now;
   S.breakStartedAt = null;
   S.breakTotalMs = 0;
   S.breakCount = 0;
-  S.blurCount = 0;
   S.undoCount = 0;
+  S.overtime = false;
+  S.away = false;
+  S.awayStartedAt = 0;
+  S.timeAwayMs = 0;
+  S.tabSwitchCount = 0;
+  S.glanceTimes = [];
+  S.actualOverride = null;
   S.view = 'active';
 
-  log('SESSION_START', { task_name: task, unit_type: unitPlural, target });
+  log('SESSION_START', {
+    sessionId: S.sessionId,
+    taskName: task,
+    unitType: unitPlural,
+    target,
+    paceReadoutEnabled: d.showPace,
+  });
   render();
 }
 
-function completeUnit() {
-  if (S.view !== 'active' || isComplete()) return;
+// trigger: 'spacebar' | 'button_click'
+function completeUnit(trigger) {
+  if (!canLog()) return;
   const now = Date.now();
   const dur = unitElapsedMs(now);
-  S.units.push({ n: S.units.length + 1, durationMs: dur, completedAt: now });
+  const prevEnd = S.units.length ? S.units[S.units.length - 1].completedElapsedMs : 0;
+  const unit = {
+    n: S.units.length + 1,
+    durationMs: dur,
+    rollingAvgMs: null,
+    trigger,
+    windowStartMs: prevEnd,
+    completedElapsedMs: elapsed(now),
+  };
+  S.units.push(unit);
+  unit.rollingAvgMs = rollingAvgMs();
   S.unitBankedMs = 0;
   S.segmentStart = now;
-  log('UNIT_COMPLETED', {
-    unit_number: S.units.length,
-    unit_duration_ms: Math.round(dur),
-    rolling_avg_pace_ms: Math.round(rollingAvgMs()),
+
+  const treatCount = S.units.length;
+  const isBonus = treatCount > S.config.target;
+  log('UNIT_LOGGED', {
+    unitIndex: unit.n,
+    unitDurationMs: Math.round(dur),
+    rollingAvgPaceMs: unit.rollingAvgMs === null ? null : Math.round(unit.rollingAvgMs),
+    trigger,
   });
+  log('TREAT_EARNED', { treatCount, unitIndex: unit.n, trigger, isBonus });
+  if (treatCount === S.config.target) log('MILESTONE_REACHED', { target: S.config.target, unitIndex: unit.n });
+
   refreshActive(true);
+  celebrate(isBonus);
+}
+
+// Dog hops, treat drops and is eaten, "+1 Treat!" pops up.
+function celebrate(isBonus) {
+  if (REDUCE_MOTION) return;
+  restartClass($('#dogHop'), 'hop');
+  restartClass($('#treat'), 'drop');
+  setTimeout(() => {
+    const treat = $('#treat');
+    if (!treat) return;
+    treat.classList.remove('drop');
+    restartClass(treat, 'eaten');
+    $('#popText').textContent = isBonus ? '+1 Bonus Treat!' : '+1 Treat!';
+    restartClass($('#popAnim'), 'run');
+  }, 750);
 }
 
 function undoLast() {
   if (S.view !== 'active' || !S.units.length) return;
   const now = Date.now();
   const u = S.units.pop();
+  // Return the timer to the undone unit: its duration plus time since it was logged (breaks excluded).
   S.unitBankedMs = u.durationMs + unitElapsedMs(now);
   S.segmentStart = now;
   S.undoCount++;
-  const avg = rollingAvgMs();
-  log('UNDO_TRIGGERED', {
-    unit_number: u.n,
-    unit_duration_ms: Math.round(u.durationMs),
-    rolling_avg_pace_ms: avg === null ? null : Math.round(avg),
-  });
+  log('UNDO_TRIGGERED', { undoneUnitIndex: u.n, undoneUnitDurationMs: Math.round(u.durationMs) });
+  log('TREAT_REMOVED', { treatCount: S.units.length, unitIndex: u.n });
   refreshActive();
+}
+
+function enterBonus() {
+  if (S.view !== 'active' || S.overtime) return;
+  S.overtime = true;
+  log('BONUS_MODE_STARTED', { treatCount: S.units.length });
+  refreshActive();
+}
+
+/* Tab/window presence. Window blur/focus and visibilitychange both feed this;
+   the S.away flag de-duplicates the overlapping events. */
+function setAway(isAway) {
+  if (!isRunning() || isAway === S.away) return;
+  const now = Date.now();
+  if (isAway) {
+    S.away = true;
+    S.awayStartedAt = now;
+    S.tabSwitchCount++;
+    log('TAB_BLUR', { unitIndex: S.units.length + 1 });
+  } else {
+    const d = now - S.awayStartedAt;
+    S.away = false;
+    S.timeAwayMs += d;
+    S.glanceTimes.push(elapsed(now));
+    log('TAB_FOCUS', { unitIndex: S.units.length + 1, awayDurationMs: Math.round(d) });
+  }
 }
 
 function startBreak() {
@@ -447,20 +589,26 @@ function startBreak() {
   S.segmentStart = null;
   S.breakStartedAt = now;
   S.view = 'break';
-  log('BREAK_STARTED', { unit_number: S.units.length + 1 });
+  log('BREAK_STARTED', { breakIndex: S.breakCount + 1, unitIndex: S.units.length + 1 });
   render();
+}
+
+function closeBreak(now, endedBySessionEnd = false) {
+  const d = now - S.breakStartedAt;
+  S.breakCount++;
+  S.breakTotalMs += d;
+  S.breakStartedAt = null;
+  const fields = { breakIndex: S.breakCount, breakDurationMs: Math.round(d) };
+  if (endedBySessionEnd) fields.endedBySessionEnd = true;
+  log('BREAK_ENDED', fields);
 }
 
 function endBreak() {
   if (S.view !== 'break') return;
   const now = Date.now();
-  const d = now - S.breakStartedAt;
-  S.breakTotalMs += d;
-  S.breakCount++;
-  S.breakStartedAt = null;
+  closeBreak(now);
   S.segmentStart = now;
   S.view = 'active';
-  log('BREAK_ENDED', { unit_number: S.units.length + 1, break_duration_ms: d });
   render();
 }
 
@@ -473,25 +621,23 @@ function endSession(reason) {
   if (!isRunning()) return;
   const now = Date.now();
   const partial = unitElapsedMs(now);
-  let implicitBreakEnd = null;
-  if (S.view === 'break') {
-    implicitBreakEnd = now - S.breakStartedAt;
-    S.breakTotalMs += implicitBreakEnd;
-    S.breakCount++;
-    S.breakStartedAt = null;
+  if (S.view === 'break') closeBreak(now, true);
+  if (S.away) {
+    const d = now - S.awayStartedAt;
+    S.away = false;
+    S.timeAwayMs += d;   // not counted as a glance: the session ended while away
+    log('TAB_FOCUS', { unitIndex: S.units.length + 1, awayDurationMs: Math.round(d), endedBySessionEnd: true });
   }
   S.unitBankedMs = 0;
   S.segmentStart = null;
   S.endedAt = now;
   S.endReason = reason;
   S.view = 'summary';
-  if (implicitBreakEnd !== null) {
-    log('BREAK_ENDED', { break_duration_ms: implicitBreakEnd, ended_by_session_end: true });
-  }
   log('SESSION_ENDED', {
-    end_reason: reason,
-    units_completed: S.units.length,
-    partial_unit_elapsed_ms: Math.round(partial),
+    reason,
+    unitsLogged: S.units.length,
+    treatsEarned: S.units.length,
+    partialUnitMs: Math.round(partial),
   });
   render();
 }
@@ -527,6 +673,168 @@ function togglePace(el) {
   el.parentElement.querySelector('.switch-state').textContent = S.draft.showPace ? 'On' : 'Off';
 }
 
+/* ---------- report computations ---------- */
+function glancesIn(u) {
+  return S.glanceTimes.filter((t) => t > u.windowStartMs && t <= u.completedElapsedMs).length;
+}
+
+function buildReport() {
+  const logged = S.units.length;
+  const durs = S.units.map((u) => u.durationMs);
+  const avg = logged ? durs.reduce((a, b) => a + b, 0) / logged : null;
+  const sd = logged ? Math.sqrt(durs.reduce((a, x) => a + (x - avg) ** 2, 0) / logged) : null;
+  let fast = null;
+  let slow = null;
+  for (const u of S.units) {
+    if (!fast || u.durationMs < fast.durationMs) fast = u;
+    if (!slow || u.durationMs > slow.durationMs) slow = u;
+  }
+  const spacebar = S.units.filter((u) => u.trigger === 'spacebar').length;
+  const actual = S.actualOverride ?? logged;
+  const missed = Math.max(0, actual - logged);
+  // Clamped to 100 when the researcher's count is below the logged total.
+  const compliance = actual > 0 ? Math.min(100, Math.round((logged / actual) * 100)) : null;
+  const lengthMs = S.endedAt - S.startedAt;
+  return {
+    logged,
+    actual,
+    missed,
+    compliance,
+    avg,
+    sd,
+    fast,
+    slow,
+    treats: logged,
+    bonus: Math.max(0, logged - S.config.target),
+    home: logged >= S.config.target,
+    spacebarPct: logged ? Math.round((spacebar / logged) * 100) : null,
+    clickPct: logged ? Math.round(((logged - spacebar) / logged) * 100) : null,
+    glances: S.glanceTimes.length,
+    tabSwitches: S.tabSwitchCount,
+    awayMs: S.timeAwayMs,
+    lookingMs: Math.max(0, lengthMs - S.timeAwayMs),
+    lengthMs,
+    breakCount: S.breakCount,
+    breakMs: S.breakTotalMs,
+  };
+}
+
+/* ---------- report exports ---------- */
+function slideSummaryText() {
+  const c = S.config;
+  const rp = buildReport();
+  const sing = c.unitSingular.toLowerCase();
+  const plural = c.unitPlural.toLowerCase();
+  const taps = rp.missed === 1 ? 'tap' : 'taps';
+  return [
+    `${c.task}: Milestone Velocity Pacer`,
+    `Logged ${rp.logged} of ${rp.actual} ${plural} actually completed (${rp.missed} missed ${taps}; tap compliance ${rp.compliance === null ? '—' : `${rp.compliance}%`})`,
+    `Treats earned: ${rp.treats} (${rp.bonus} bonus) · Home safe: ${rp.home ? 'yes' : 'no'}`,
+    `Tab switches: ${rp.tabSwitches} · glances back: ${rp.glances} · on tracker ${fmtDur(rp.lookingMs)} · away ${fmtDur(rp.awayMs)}`,
+    `Average pace: ${rp.avg === null ? '—' : `${fmtDur(rp.avg)} per ${sing}`}${rp.sd === null ? '' : ` (σ ${fmtDur(rp.sd)})`}`,
+    `Fastest: ${rp.fast ? `${sing} ${rp.fast.n} (${fmtDur(rp.fast.durationMs)})` : '—'} · Slowest: ${rp.slow ? `${sing} ${rp.slow.n} (${fmtDur(rp.slow.durationMs)})` : '—'}`,
+    `Input: ${rp.spacebarPct === null ? '—' : `${rp.spacebarPct}% spacebar, ${rp.clickPct}% button click`}`,
+    `Breaks: ${rp.breakCount} (${fmtDur(rp.breakMs)}) · Session length ${fmtDur(rp.lengthMs)} · Live pace readout ${c.showPace ? 'On' : 'Off'}`,
+  ].join('\n');
+}
+
+function buildJSON() {
+  const c = S.config;
+  const rp = buildReport();
+  const pick = (u) => (u ? { unitIndex: u.n, durationMs: Math.round(u.durationMs) } : null);
+  return JSON.stringify({
+    schema: 'pace-tracker-log/v3',
+    sessionId: S.sessionId,
+    config: {
+      taskName: c.task,
+      unitType: c.unitPlural,
+      target: c.target,
+      paceReadoutEnabled: c.showPace,
+      condition: c.condition,
+    },
+    startedAt: new Date(S.startedAt).toISOString(),
+    endedAt: new Date(S.endedAt).toISOString(),
+    endReason: S.endReason,
+    researcherCheck: {
+      loggedUnits: rp.logged,
+      actualUnits: rp.actual,
+      missedTaps: rp.missed,
+      tapComplianceRate: rp.compliance,
+    },
+    treats: {
+      treatsEarned: rp.treats,
+      bonusTreats: rp.bonus,
+      homeSafe: rp.home,
+    },
+    summary: {
+      averagePaceMs: rp.avg === null ? null : Math.round(rp.avg),
+      paceStdDevMs: rp.sd === null ? null : Math.round(rp.sd),
+      fastestUnit: pick(rp.fast),
+      slowestUnit: pick(rp.slow),
+      inputMethod: {
+        spacebarUnits: S.units.filter((u) => u.trigger === 'spacebar').length,
+        buttonClickUnits: S.units.filter((u) => u.trigger === 'button_click').length,
+      },
+      tabSwitchCount: rp.tabSwitches,
+      glanceCount: rp.glances,
+      timeOnTrackerMs: Math.round(rp.lookingMs),
+      timeAwayMs: Math.round(rp.awayMs),
+      breakCount: rp.breakCount,
+      totalBreakMs: Math.round(rp.breakMs),
+      sessionLengthMs: rp.lengthMs,
+    },
+    units: S.units.map((u) => ({
+      unitIndex: u.n,
+      durationMs: Math.round(u.durationMs),
+      rollingAvgPaceMs: u.rollingAvgMs === null ? null : Math.round(u.rollingAvgMs),
+      trigger: u.trigger,
+      glances: glancesIn(u),
+    })),
+    sessionLogs: S.sessionLogs,
+  }, null, 2);
+}
+
+function download(filename, text, mime) {
+  const url = URL.createObjectURL(new Blob([text], { type: mime }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function downloadLog() {
+  const stamp = new Date(S.startedAt).toISOString().replace(/[:.]/g, '-');
+  download(`pace-tracker-log-${stamp}.json`, buildJSON(), 'application/json');
+}
+
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch { ok = false; }
+    ta.remove();
+    return ok;
+  }
+}
+
+async function copySlideSummary(el) {
+  const ok = await copyText(slideSummaryText());
+  el.textContent = ok ? 'Copied' : 'Copy failed';
+  setTimeout(() => { el.textContent = 'Copy Slide Summary'; }, 1800);
+}
+
 /* ---------- views ---------- */
 function setupHTML() {
   const d = S.draft;
@@ -537,8 +845,7 @@ function setupHTML() {
     <form id="setupForm" novalidate>
       <div class="field">
         <label for="taskInput">Task name</label>
-        <input id="taskInput" type="text" maxlength="120" autocomplete="off"
-               value="${esc(d.task)}">
+        <input id="taskInput" type="text" maxlength="120" autocomplete="off" value="${esc(d.task)}">
       </div>
       <div class="field">
         <span class="label" id="unitLabel">Unit</span>
@@ -567,64 +874,138 @@ function setupHTML() {
   </section>`;
 }
 
+// Dog, doghouse and start flag share one SVG. Dog idles with a slow tail wag and breathing motion.
+function trackSVG() {
+  return `
+  <svg viewBox="0 0 600 130" role="img" aria-label="Dog walking home along the track toward the doghouse">
+    <!-- start flag -->
+    <line x1="28" y1="50" x2="28" y2="96" stroke="#64748B" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M28 50 L50 57 L28 64 Z" fill="#0D9488"/>
+    <!-- track -->
+    <rect x="56" y="93" width="456" height="6" rx="3" fill="#E2E8F0"/>
+    <rect id="trackFill" x="56" y="93" width="456" height="6" rx="3" fill="${'#D97706'}"/>
+    <!-- doghouse -->
+    <path d="M510 66 L546 36 L582 66 Z" fill="#EA580C"/>
+    <rect x="520" y="62" width="52" height="37" rx="3" fill="#FFF7ED" stroke="#EA580C" stroke-width="2.5"/>
+    <path d="M534 99 V82 A8 8 0 0 1 550 82 V99 Z" fill="#D97706"/>
+    <!-- treat (positioned in front of the dog) -->
+    <g id="treatPos">
+      <g id="treat" class="treat">
+        <rect x="-8" y="90" width="16" height="5" fill="#FEF3C7" stroke="#B45309" stroke-width="1.5"/>
+        <circle cx="-8" cy="90" r="3" fill="#FEF3C7" stroke="#B45309" stroke-width="1.5"/>
+        <circle cx="-8" cy="95" r="3" fill="#FEF3C7" stroke="#B45309" stroke-width="1.5"/>
+        <circle cx="8" cy="90" r="3" fill="#FEF3C7" stroke="#B45309" stroke-width="1.5"/>
+        <circle cx="8" cy="95" r="3" fill="#FEF3C7" stroke="#B45309" stroke-width="1.5"/>
+      </g>
+    </g>
+    <!-- dog: local origin is the ground point -->
+    <g id="dog">
+      <g id="dogHop" class="dog-hop">
+        <g transform="translate(0 96)">
+          <g>
+            <animateTransform attributeName="transform" type="scale" values="1;1.02;1"
+                              dur="3.2s" repeatCount="indefinite"/>
+            <path d="M-13 -12 V0 M-5 -12 V0 M7 -12 V0 M15 -12 V0" fill="none" stroke="#EA580C" stroke-width="4" stroke-linecap="round"/>
+            <path d="M-20 -22 Q-34 -30 -30 -46" fill="none" stroke="#EA580C" stroke-width="5" stroke-linecap="round">
+              <animateTransform id="tailAnim" attributeName="transform" type="rotate"
+                                values="-14 -20 -22;14 -20 -22;-14 -20 -22" dur="1.8s" repeatCount="indefinite"/>
+            </path>
+            <ellipse cx="0" cy="-20" rx="22" ry="13" fill="#D97706"/>
+            <circle cx="20" cy="-34" r="12" fill="#D97706"/>
+            <ellipse cx="13" cy="-44" rx="5" ry="9" fill="#EA580C"/>
+            <ellipse cx="30" cy="-28" rx="6" ry="4.5" fill="#FBBF24"/>
+            <circle cx="35" cy="-30" r="2" fill="#1E293B"/>
+            <circle cx="24" cy="-37" r="1.8" fill="#1E293B"/>
+          </g>
+        </g>
+      </g>
+    </g>
+    <!-- "+1 Treat!" pop -->
+    <g id="popPos">
+      <g id="popAnim" class="pop-anim">
+        <path d="M-30 30 C-36 25 -36 20 -32 20 C-30 20 -30 22 -30 22 C-30 22 -28 20 -26 20 C-22 20 -22 25 -30 30 Z" fill="#EA580C"/>
+        <text id="popText" x="0" y="34" text-anchor="middle" font-size="14" font-weight="600" fill="#C2410C">+1 Treat!</text>
+      </g>
+    </g>
+  </svg>`;
+}
+
 function activeHTML() {
   const c = S.config;
   return `
   <section class="focus" aria-label="Session">
     <div class="task">${esc(c.task)}</div>
     <h1 class="milestone" id="milestone" aria-live="polite"></h1>
-    <div class="progress" id="progressbar" role="progressbar" aria-label="Progress"
-         aria-valuemin="0" aria-valuemax="${c.target}" aria-valuenow="0">
-      <div class="fill" id="fill"></div>
+    <div class="treat-badge" id="treatBadge" aria-live="polite"></div>
+    <div class="track-wrap">${trackSVG()}</div>
+    <div class="banner" id="homeBanner" hidden role="status">
+      <p class="banner-title">Home Safe!</p>
+      <div class="banner-actions">
+        <button type="button" class="btn outline" data-action="end-home">End Session</button>
+        <button type="button" class="btn" data-action="bonus">Bonus Treats (Overtime)</button>
+      </div>
     </div>
     ${c.showPace ? `
     <div class="metrics">
-      <div class="metric"><span class="label">Unit time</span><span class="value mono" id="unitElapsed">00:00</span></div>
-      <div class="metric"><span class="label">Avg pace</span><span class="value" id="avgPace">—</span></div>
-      <div class="metric"><span class="label">Remaining</span><span class="value" id="eta">—</span></div>
+      <div class="metric"><span class="label">Current Unit Time</span><span class="value mono" id="unitElapsed">00:00</span></div>
+      <div class="metric"><span class="label">Avg Pace</span><span class="value" id="avgPace">—</span></div>
+      <div class="metric"><span class="label">Est. Time Left</span><span class="value" id="eta">—</span></div>
     </div>` : ''}
-    <button type="button" class="btn big" id="primaryBtn" data-action="primary" aria-keyshortcuts="Space"></button>
+    <button type="button" class="btn big" id="primaryBtn" data-action="primary" aria-keyshortcuts="Space">+ Complete ${esc(cap(c.unitSingular))} <span class="btn-inline">(Space)</span></button>
     <nav class="bottombar" aria-label="Session controls">
-      <button type="button" class="link" id="undoBtn" data-action="undo">Undo</button>
+      <button type="button" class="link" id="undoBtn" data-action="undo">Undo Last</button>
       <button type="button" class="link" data-action="break">Break</button>
       <button type="button" class="link" data-action="end">End Session</button>
     </nav>
   </section>`;
 }
 
+let tailDur = '1.8s';
+function setDogSpeed(dur) {
+  const tail = $('#tailAnim');
+  if (!tail || dur === tailDur) return;
+  tailDur = dur;
+  tail.setAttribute('dur', dur);
+}
+
 function refreshActive(pulse = false) {
   const c = S.config;
   const done = S.units.length;
-  const complete = done >= c.target;
-  const sing = c.unitSingular;
+  const home = done >= c.target;
+  const showBanner = home && !S.overtime;
+  const f = Math.min(1, done / c.target);
+  const bonus = Math.max(0, done - c.target);
+  const plural = c.unitPlural.toLowerCase();
 
-  setText('#milestone', complete
-    ? `${done} of ${c.target} done`
-    : `${cap(sing)} ${done + 1} of ${c.target}`);
-  const pct = Math.round((done / c.target) * 100);
-  $('#fill').style.width = `${pct}%`;
-  $('#progressbar').setAttribute('aria-valuenow', String(done));
+  setText('#milestone', showBanner
+    ? `All ${c.target} ${plural} done`
+    : home
+      ? `Bonus treat ${bonus + 1}`
+      : `${cap(c.unitSingular)} ${done + 1} of ${c.target}`);
 
-  const btn = $('#primaryBtn');
-  const label = complete
-    ? 'Finish'
-    : `+ Complete ${esc(cap(sing))} <span class="btn-inline">(Space)</span>`;
-  if (btn.dataset.label !== label) {
-    btn.innerHTML = label;
-    btn.dataset.label = label;
-  }
+  setText('#treatBadge', `🦴 ${bonus > 0 ? `${done} Treats Earned · ${bonus} bonus` : `${done} / ${c.target} Treats Earned`}`);
+
+  // Track, dog, treat and pop are all positioned from the same progress fraction.
+  $('#trackFill').style.transform = `scaleX(${f})`;
+  $('#dog').style.transform = `translateX(${dogX(f)}px)`;
+  $('#treatPos').style.transform = `translateX(${dogX(f) + TREAT_OFFSET_X}px)`;
+  $('#popPos').style.transform = `translateX(${dogX(f)}px)`;
+  setDogSpeed(home ? '0.6s' : '1.8s');
+
+  $('#homeBanner').hidden = !showBanner;
+  $('#primaryBtn').hidden = showBanner;
   $('#undoBtn').disabled = done === 0;
 
   if (c.showPace) {
     const avg = rollingAvgMs();
     const rem = c.target - done;
     setText('#unitElapsed', fmtClock(unitElapsedMs()));
-    setText('#avgPace', avg === null ? '—' : `${fmtDur(avg)}`);
-    setText('#eta', rem === 0 ? '0' : avg === null ? '—' : fmtEta(avg * rem));
+    setText('#avgPace', avg === null ? '—' : fmtDur(avg));
+    setText('#eta', rem > 0 && avg !== null ? fmtEta(avg * rem) : rem > 0 ? '—' : 'Home');
   }
 
   if (pulse) {
-    pulseEl(btn);
+    pulseEl($('#primaryBtn'));
     pulseEl($('#milestone'));
   }
 }
@@ -647,37 +1028,93 @@ function refreshBreak() {
   setText('#breakTotal', fmtClock(S.breakTotalMs + live));
 }
 
-function summaryHTML() {
-  const c = S.config;
-  const st = computeStats();
-  const sing = c.unitSingular.toLowerCase();
-  const plural = c.unitPlural.toLowerCase();
-  const rows = [
-    ['Completed', `${st.n} / ${c.target} ${plural}`],
-    ['Average pace', st.avg === null ? '—' : `${fmtDur(st.avg)} / ${sing}`],
-    ['Fastest', st.fast ? `${sing} ${st.fast.n} · ${fmtDur(st.fast.durationMs)}` : '—'],
-    ['Slowest', st.slow ? `${sing} ${st.slow.n} · ${fmtDur(st.slow.durationMs)}` : '—'],
-    ['Break time', fmtDur(st.breakMs)],
-    ['Session length', fmtDur(st.lengthMs)],
-  ];
+function cardsHTML(rp) {
+  const sing = S.config.unitSingular.toLowerCase();
+  const plural = S.config.unitPlural.toLowerCase();
+  const taps = rp.missed === 1 ? 'tap' : 'taps';
+  const card = (label, big, sub) =>
+    `<div class="card-stat"><span class="label">${label}</span><span class="big">${big}</span><span class="sub">${sub}</span></div>`;
+  return [
+    card('Logged vs actual',
+      `${rp.logged} / ${rp.actual} ${plural}`,
+      `${rp.missed} missed ${taps}${rp.compliance === null ? '' : ` · ${rp.compliance}% compliance`}`),
+    card('Treats earned',
+      `${rp.treats}`,
+      `${rp.bonus} bonus · ${rp.home ? 'home safe' : 'not yet home'}`),
+    card('Tracker glances',
+      `${rp.glances} back`,
+      `on tracker ${fmtDur(rp.lookingMs)} · away ${fmtDur(rp.awayMs)}`),
+    card('Average pace',
+      rp.avg === null ? '—' : `${fmtDur(rp.avg)} / ${sing}`,
+      rp.avg === null ? '' : `σ ${fmtDur(rp.sd)} · fastest ${fmtDur(rp.fast.durationMs)} · slowest ${fmtDur(rp.slow.durationMs)}`),
+    card('Input method',
+      rp.spacebarPct === null ? '—' : `${rp.spacebarPct}% spacebar`,
+      rp.spacebarPct === null ? '' : `${rp.clickPct}% button click`),
+  ].join('');
+}
+
+function checkNoteText(rp) {
+  const parts = [];
+  if (rp.slow) {
+    parts.push(`Longest delay: ${cap(S.config.unitSingular.toLowerCase())} ${rp.slow.n} (${fmtDur(rp.slow.durationMs)})${rp.missed > 0 ? ', the likeliest spot for a missed tap.' : '.'}`);
+  }
+  if (rp.actual < rp.logged) parts.push('Researcher count is below the logged total.');
+  return parts.join(' ');
+}
+
+function unitsTableHTML() {
+  if (!S.units.length) return '<p class="sub">No units logged.</p>';
+  const sing = cap(S.config.unitSingular.toLowerCase());
+  const rows = S.units.map((u) => `
+      <tr>
+        <td>${sing} ${u.n}</td>
+        <td>${fmtDur(u.durationMs)}</td>
+        <td>${fmtDur(u.rollingAvgMs)}</td>
+        <td>${glancesIn(u)}</td>
+      </tr>`).join('');
   return `
-  <section class="panel" aria-labelledby="sumTitle">
-    <h1 id="sumTitle">${esc(c.task)}</h1>
-    <dl class="stats">
-      ${rows.map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('')}
-    </dl>
+  <table class="units">
+    <thead><tr><th>Unit</th><th>Time spent</th><th>Rolling avg</th><th>Glances</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+function reportHTML() {
+  const c = S.config;
+  const rp = buildReport();
+  const plural = c.unitPlural.toLowerCase();
+  const status = rp.home
+    ? `Home safe: all ${c.target} ${plural} logged${rp.bonus ? `, plus ${rp.bonus} bonus` : ''}.`
+    : `Ended at ${rp.logged} of ${c.target} ${plural}.`;
+  return `
+  <section class="report" aria-labelledby="repTitle">
+    <h1 id="repTitle">${esc(c.task)}</h1>
+    <p class="sub">${esc(status)}</p>
+    <div class="cards" id="cards">${cardsHTML(rp)}</div>
+    <div class="check">
+      <label for="actualInput" class="label">Researcher check: actual units completed</label>
+      <div><input id="actualInput" type="number" inputmode="numeric" min="0" max="999" step="1" value="${rp.actual}"></div>
+      <p class="sub" id="checkNote">${esc(checkNoteText(rp))}</p>
+    </div>
+    <h2>Unit breakdown</h2>
+    ${unitsTableHTML()}
     <div class="actions">
+      <button type="button" class="btn outline" data-action="copy">Copy Slide Summary</button>
+      <button type="button" class="btn outline" data-action="download">Download Full JSON/CSV Log</button>
       <button type="button" class="link" data-action="new">New session</button>
     </div>
   </section>`;
 }
 
-const VIEWS = { setup: setupHTML, active: activeHTML, break: breakHTML, summary: summaryHTML };
+const VIEWS = { setup: setupHTML, active: activeHTML, break: breakHTML, summary: reportHTML };
 
 function render() {
   document.body.dataset.view = S.view;
   $('#app').innerHTML = VIEWS[S.view]();
-  if (S.view === 'active') refreshActive();
+  if (S.view === 'active') {
+    if (REDUCE_MOTION) document.querySelectorAll('#app animateTransform').forEach((n) => n.remove());
+    refreshActive();
+  }
   if (S.view === 'break') refreshBreak();
   if (S.view === 'setup' && !S.draft.task) $('#taskInput')?.focus();
 }
@@ -688,16 +1125,30 @@ $('#app').addEventListener('click', (e) => {
   if (!el || el.disabled) return;
   if (el.dataset.unit) return setUnit(el.dataset.unit);
   switch (el.dataset.action) {
-    case 'primary': return isComplete() ? endSession('target_reached') : completeUnit();
+    case 'primary': return completeUnit('button_click');
     case 'undo': return undoLast();
     case 'break': return toggleBreak();
     case 'resume': return endBreak();
     case 'end': return confirmEnd(el);
+    case 'end-home': return endSession('target_reached');
+    case 'bonus': return enterBonus();
     case 'toggle-pace': return togglePace(el);
+    case 'copy': return copySlideSummary(el);
+    case 'download': return downloadLog();
     case 'new':
       S.view = 'setup';
       return render();
   }
+});
+
+// Researcher check: live recompute of the cards and note as the count changes.
+$('#app').addEventListener('input', (e) => {
+  if (e.target.id !== 'actualInput') return;
+  const n = Number.parseInt(e.target.value, 10);
+  S.actualOverride = Number.isFinite(n) && n >= 0 ? n : null;
+  const rp = buildReport();
+  $('#cards').innerHTML = cardsHTML(rp);
+  $('#checkNote').textContent = checkNoteText(rp);
 });
 
 document.addEventListener('submit', (e) => {
@@ -714,8 +1165,8 @@ document.addEventListener('keydown', (e) => {
   if (e.altKey || e.ctrlKey || e.metaKey) return;
   if (!isRunning() || isTyping(e.target)) return;
   if (isSpace(e)) {
-    e.preventDefault();
-    if (!e.repeat && S.view === 'active' && !isComplete()) completeUnit();
+    e.preventDefault();               // stops a focused button from also firing a click
+    if (!e.repeat) completeUnit('spacebar');
     return;
   }
   if ((e.key === 'p' || e.key === 'P') && !e.repeat) {
@@ -728,16 +1179,10 @@ document.addEventListener('keyup', (e) => {
   if (isSpace(e) && isRunning() && !isTyping(e.target)) e.preventDefault();
 });
 
-window.addEventListener('blur', () => {
-  if (!isRunning()) return;
-  S.blurCount++;
-  log('WINDOW_BLUR', { unit_number: S.units.length + 1 });
-});
-
-window.addEventListener('focus', () => {
-  if (!isRunning()) return;
-  log('WINDOW_FOCUS', { unit_number: S.units.length + 1 });
-});
+// Tab/window presence: blur/focus on the window and visibilitychange.
+window.addEventListener('blur', () => setAway(true));
+window.addEventListener('focus', () => setAway(false));
+document.addEventListener('visibilitychange', () => setAway(document.visibilityState === 'hidden'));
 
 setInterval(() => {
   if (S.view === 'active') refreshActive();
