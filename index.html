@@ -291,6 +291,23 @@ input:focus, button:focus-visible {
 }
 .units td { padding: 8px 6px; border-bottom: 1px solid var(--line); }
 .actions { display: flex; flex-direction: column; gap: 8px; }
+.end-art { text-align: center; margin: 0 0 16px; }
+.end-art svg { width: 100%; max-width: 230px; height: auto; display: block; margin: 0 auto; overflow: visible; }
+.bob { animation: bob 2.4s ease-in-out infinite; }
+.bob-slow { animation: bob-slow 3.6s ease-in-out infinite; }
+@keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes bob-slow { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+.stats { margin: 0 0 28px; }
+.stats div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 15px;
+}
+.stats dt { color: var(--muted); }
+.stats dd { margin: 0; font-weight: 500; text-align: right; }
 .toast { min-height: 20px; font-size: 14px; color: var(--accent-dark); margin: 12px 0 0; text-align: center; }
 
 .pulse { animation: pulse .4s ease-out; }
@@ -410,7 +427,7 @@ const isRunning = () => S.view === 'active' || S.view === 'break';
 const elapsed = (now = Date.now()) => now - S.startedAt;
 const unitElapsedMs = (now = Date.now()) => S.unitBankedMs + (S.segmentStart !== null ? now - S.segmentStart : 0);
 const atTarget = () => S.units.length >= S.config.target;
-const canLog = () => S.view === 'active' && (!atTarget() || S.overtime);
+const canLog = () => S.view === 'active' && !atTarget();
 
 function rollingAvgMs() {
   const win = S.units.slice(-ROLLING_WINDOW);
@@ -528,7 +545,7 @@ function completeUnit(trigger) {
   celebrate(isBonus);
 }
 
-// Dog hops, treat drops and is eaten, "+1 Treat!" pops up.
+// Dog hops, treat drops and is eaten.
 function celebrate(isBonus) {
   if (REDUCE_MOTION) return;
   restartClass($('#dogHop'), 'hop');
@@ -538,8 +555,6 @@ function celebrate(isBonus) {
     if (!treat) return;
     treat.classList.remove('drop');
     restartClass(treat, 'eaten');
-    $('#popText').textContent = isBonus ? '+1 Bonus Treat!' : '+1 Treat!';
-    restartClass($('#popAnim'), 'run');
   }, 750);
 }
 
@@ -556,12 +571,6 @@ function undoLast() {
   refreshActive();
 }
 
-function enterBonus() {
-  if (S.view !== 'active' || S.overtime) return;
-  S.overtime = true;
-  log('BONUS_MODE_STARTED', { treatCount: S.units.length });
-  refreshActive();
-}
 
 /* Tab/window presence. Window blur/focus and visibilitychange both feed this;
    the S.away flag de-duplicates the overlapping events. */
@@ -729,7 +738,7 @@ function slideSummaryText() {
   return [
     `${c.task}: Milestone Velocity Pacer`,
     `Logged ${rp.logged} of ${rp.actual} ${plural} actually completed (${rp.missed} missed ${taps}; tap compliance ${rp.compliance === null ? '—' : `${rp.compliance}%`})`,
-    `Treats earned: ${rp.treats} (${rp.bonus} bonus) · Home safe: ${rp.home ? 'yes' : 'no'}`,
+    `Treats earned: ${rp.treats} (${rp.bonus} bonus) · Goal met: ${rp.home ? 'yes' : 'no'}`,
     `Tab switches: ${rp.tabSwitches} · glances back: ${rp.glances} · on tracker ${fmtDur(rp.lookingMs)} · away ${fmtDur(rp.awayMs)}`,
     `Average pace: ${rp.avg === null ? '—' : `${fmtDur(rp.avg)} per ${sing}`}${rp.sd === null ? '' : ` (σ ${fmtDur(rp.sd)})`}`,
     `Fastest: ${rp.fast ? `${sing} ${rp.fast.n} (${fmtDur(rp.fast.durationMs)})` : '—'} · Slowest: ${rp.slow ? `${sing} ${rp.slow.n} (${fmtDur(rp.slow.durationMs)})` : '—'}`,
@@ -920,13 +929,6 @@ function trackSVG() {
         </g>
       </g>
     </g>
-    <!-- "+1 Treat!" pop -->
-    <g id="popPos">
-      <g id="popAnim" class="pop-anim">
-        <path d="M-30 30 C-36 25 -36 20 -32 20 C-30 20 -30 22 -30 22 C-30 22 -28 20 -26 20 C-22 20 -22 25 -30 30 Z" fill="#EA580C"/>
-        <text id="popText" x="0" y="34" text-anchor="middle" font-size="14" font-weight="600" fill="#C2410C">+1 Treat!</text>
-      </g>
-    </g>
   </svg>`;
 }
 
@@ -936,15 +938,7 @@ function activeHTML() {
   <section class="focus" aria-label="Session">
     <div class="task">${esc(c.task)}</div>
     <h1 class="milestone" id="milestone" aria-live="polite"></h1>
-    <div class="treat-badge" id="treatBadge" aria-live="polite"></div>
     <div class="track-wrap">${trackSVG()}</div>
-    <div class="banner" id="homeBanner" hidden role="status">
-      <p class="banner-title">Home Safe!</p>
-      <div class="banner-actions">
-        <button type="button" class="btn outline" data-action="end-home">End Session</button>
-        <button type="button" class="btn" data-action="bonus">Bonus Treats (Overtime)</button>
-      </div>
-    </div>
     ${c.showPace ? `
     <div class="metrics">
       <div class="metric"><span class="label">Current Unit Time</span><span class="value mono" id="unitElapsed">00:00</span></div>
@@ -972,28 +966,23 @@ function refreshActive(pulse = false) {
   const c = S.config;
   const done = S.units.length;
   const home = done >= c.target;
-  const showBanner = home && !S.overtime;
   const f = Math.min(1, done / c.target);
   const bonus = Math.max(0, done - c.target);
   const plural = c.unitPlural.toLowerCase();
 
-  setText('#milestone', showBanner
+  setText('#milestone', home
     ? `All ${c.target} ${plural} done`
     : home
       ? `Bonus treat ${bonus + 1}`
       : `${cap(c.unitSingular)} ${done + 1} of ${c.target}`);
 
-  setText('#treatBadge', `🦴 ${bonus > 0 ? `${done} Treats Earned · ${bonus} bonus` : `${done} / ${c.target} Treats Earned`}`);
-
   // Track, dog, treat and pop are all positioned from the same progress fraction.
   $('#trackFill').style.transform = `scaleX(${f})`;
   $('#dog').style.transform = `translateX(${dogX(f)}px)`;
   $('#treatPos').style.transform = `translateX(${dogX(f) + TREAT_OFFSET_X}px)`;
-  $('#popPos').style.transform = `translateX(${dogX(f)}px)`;
   setDogSpeed(home ? '0.6s' : '1.8s');
 
-  $('#homeBanner').hidden = !showBanner;
-  $('#primaryBtn').hidden = showBanner;
+  $('#primaryBtn').hidden = home;
   $('#undoBtn').disabled = done === 0;
 
   if (c.showPace) {
@@ -1001,7 +990,7 @@ function refreshActive(pulse = false) {
     const rem = c.target - done;
     setText('#unitElapsed', fmtClock(unitElapsedMs()));
     setText('#avgPace', avg === null ? '—' : fmtDur(avg));
-    setText('#eta', rem > 0 && avg !== null ? fmtEta(avg * rem) : rem > 0 ? '—' : 'Home');
+    setText('#eta', rem > 0 && avg !== null ? fmtEta(avg * rem) : rem > 0 ? '—' : 'Done');
   }
 
   if (pulse) {
@@ -1040,7 +1029,7 @@ function cardsHTML(rp) {
       `${rp.missed} missed ${taps}${rp.compliance === null ? '' : ` · ${rp.compliance}% compliance`}`),
     card('Treats earned',
       `${rp.treats}`,
-      `${rp.bonus} bonus · ${rp.home ? 'home safe' : 'not yet home'}`),
+      `${rp.bonus} bonus · ${rp.home ? 'goal met' : 'goal not met'}`),
     card('Tracker glances',
       `${rp.glances} back`,
       `on tracker ${fmtDur(rp.lookingMs)} · away ${fmtDur(rp.awayMs)}`),
@@ -1079,29 +1068,68 @@ function unitsTableHTML() {
   </table>`;
 }
 
+// Dog artwork for the ending page. Local origin is the ground point.
+function dogBody(mood) {
+  const happy = mood === 'happy';
+  const mouth = happy
+    ? '<ellipse cx="33" cy="-22" rx="2.5" ry="2" fill="#F87171"/>'
+    : '';
+  const sparkle = happy ? '' : '<path d="M48 -50 l2 -5 l2 5 l5 2 l-5 2 l-2 5 l-2 -5 l-5 -2 z" fill="#FBBF24"/>';
+  return `
+    <path d="M-13 -12 V0 M-5 -12 V0 M7 -12 V0 M15 -12 V0" fill="none" stroke="#EA580C" stroke-width="4" stroke-linecap="round"/>
+    <path d="M-20 -22 Q-34 -30 -30 -46" fill="none" stroke="#EA580C" stroke-width="5" stroke-linecap="round">
+      <animateTransform attributeName="transform" type="rotate" values="-14 -20 -22;14 -20 -22;-14 -20 -22"
+                        dur="${happy ? '0.7s' : '2.2s'}" repeatCount="indefinite"/>
+    </path>
+    <ellipse cx="0" cy="-20" rx="22" ry="13" fill="#D97706"/>
+    <circle cx="20" cy="-34" r="12" fill="#D97706"/>
+    <ellipse cx="13" cy="-44" rx="5" ry="9" fill="#EA580C"/>
+    <ellipse cx="30" cy="-28" rx="6" ry="4.5" fill="#FBBF24"/>
+    <circle cx="35" cy="-30" r="2" fill="#1E293B"/>
+    <circle cx="24" cy="-37" r="1.8" fill="#1E293B"/>
+    <circle cx="25" cy="-38" r="0.6" fill="#FFFFFF"/>
+    ${mouth}
+    ${sparkle}`;
+}
+
+function endArtHTML(home) {
+  if (home) {
+    return `
+    <svg viewBox="80 40 160 130" role="img" aria-label="Dog happily home in its doghouse">
+      <path d="M94 116 L150 66 L206 116 Z" fill="#EA580C"/>
+      <rect x="106" y="112" width="88" height="50" rx="4" fill="#FFF7ED" stroke="#EA580C" stroke-width="3"/>
+      <path d="M134 162 V140 A16 16 0 0 1 166 140 V162 Z" fill="#7C2D12"/>
+      <g class="bob"><g transform="translate(150 162) scale(1.1)">${dogBody('happy')}</g></g>
+    </svg>`;
+  }
+  return `
+    <svg viewBox="80 40 160 130" role="img" aria-label="Dog sitting and cheering you on">
+      <g class="bob-slow"><g transform="translate(150 160) scale(1.6)">${dogBody('encourage')}</g></g>
+    </svg>`;
+}
+
 function reportHTML() {
   const c = S.config;
   const rp = buildReport();
+  const sing = c.unitSingular.toLowerCase();
   const plural = c.unitPlural.toLowerCase();
-  const status = rp.home
-    ? `Home safe: all ${c.target} ${plural} logged${rp.bonus ? `, plus ${rp.bonus} bonus` : ''}.`
-    : `Ended at ${rp.logged} of ${c.target} ${plural}.`;
+  const rows = [
+    ['Completed', `${rp.logged} of ${c.target} ${plural}`],
+    ['Average pace', rp.avg === null ? '—' : `${fmtDur(rp.avg)} per ${sing}`],
+    ['Breaks', rp.breakCount ? `${rp.breakCount} (${fmtDur(rp.breakMs)})` : 'None'],
+    ['Time spent', fmtDur(rp.lengthMs)],
+  ];
+  if (rp.bonus > 0) rows.splice(1, 0, ['Bonus', `${rp.bonus} extra`]);
   return `
-  <section class="report" aria-labelledby="repTitle">
-    <h1 id="repTitle">${esc(c.task)}</h1>
-    <p class="sub">${esc(status)}</p>
-    <div class="cards" id="cards">${cardsHTML(rp)}</div>
-    <div class="check">
-      <label for="actualInput" class="label">Researcher check: actual units completed</label>
-      <div><input id="actualInput" type="number" inputmode="numeric" min="0" max="999" step="1" value="${rp.actual}"></div>
-      <p class="sub" id="checkNote">${esc(checkNoteText(rp))}</p>
-    </div>
-    <h2>Unit breakdown</h2>
-    ${unitsTableHTML()}
+  <section class="panel" aria-labelledby="sumTitle">
+    <div class="end-art">${endArtHTML(rp.home)}</div>
+    <h1 id="sumTitle">${rp.home ? 'Goal met!' : 'Session ended'}</h1>
+    <p class="sub">${esc(c.task)}</p>
+    <dl class="stats">
+      ${rows.map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('')}
+    </dl>
     <div class="actions">
-      <button type="button" class="btn outline" data-action="copy">Copy Slide Summary</button>
-      <button type="button" class="btn outline" data-action="download">Download Full JSON/CSV Log</button>
-      <button type="button" class="link" data-action="new">New session</button>
+      <button type="button" class="btn" data-action="new">New session</button>
     </div>
   </section>`;
 }
@@ -1131,7 +1159,6 @@ $('#app').addEventListener('click', (e) => {
     case 'resume': return endBreak();
     case 'end': return confirmEnd(el);
     case 'end-home': return endSession('target_reached');
-    case 'bonus': return enterBonus();
     case 'toggle-pace': return togglePace(el);
     case 'copy': return copySlideSummary(el);
     case 'download': return downloadLog();
